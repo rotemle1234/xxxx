@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>שאלון הטיול המושלם</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        #app {
+            background-color: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            max-width: 500px;
+            width: 100%;
+        }
+        .screen {
+            display: none;
+        }
+        .active {
+            display: block;
+        }
+        .option {
+            background-color: #f0f0f0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 10px;
+            margin: 10px 0;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .option:hover, .option.selected {
+            background-color: #e0e0e0;
+        }
+        #progress {
+            height: 10px;
+            background-color: #4CAF50;
+            width: 0%;
+            transition: width 0.5s;
+        }
+        .cta-button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        .cta-button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div id="lobby" class="screen active">
+            <h1>ברוכים הבאים לשאלון הטיול המושלם! 🌍✈️</h1>
+            <button class="cta-button" onclick="startQuiz()">התחל שאלון</button>
+        </div>
+
+        <div id="quiz" class="screen">
+            <div id="progress"></div>
+            <div id="question">
+                <h2 id="questionText"></h2>
+                <div id="options"></div>
+            </div>
+            <button class="cta-button" onclick="nextQuestion()">הבא</button>
+        </div>
+
+        <div id="results" class="screen">
+            <h1>התוצאות שלך! 🎉</h1>
+            <div id="recommendations">
+                <h2>היעד המומלץ עבורך:</h2>
+                <div id="destination">
+                    <h3 id="destinationName"></h3>
+                    <img id="destinationImage" alt="תמונת היעד" style="max-width: 100%; height: auto;">
+                    <a id="destinationLink" class="cta-button" target="_blank">לחץ כאן למחירים מיוחדים</a>
+                </div>
+                <div id="attractions">
+                    <h3>אטרקציות מומלצות:</h3>
+                    <ul id="attractionsList"></ul>
+                </div>
+            </div>
+            <button class="cta-button" onclick="restartQuiz()">התחל מחדש</button>
+        </div>
+    </div>
+
+    <script>
+        const questions = [
+            {
+                question: "מה סגנון החופשה המועדף עליך?",
+                options: ["חופשה אקטיבית", "חופשה רגועה", "חופשה תרבותית", "חופשת אוכל"]
+            },
+            {
+                question: "איזה נוף אתה מעדיף?",
+                options: ["ים", "הרים", "עיר", "כפר"]
+            },
+            {
+                question: "מה הטמפרטורה האידיאלית עבורך?",
+                options: ["חם מאוד", "נעים", "קריר", "קר"]
+            },
+            {
+                question: "מהי העדפת הלינה שלך?",
+                options: ["מלון יוקרה", "צימר", "אכסניה", "קמפינג"]
+            },
+            {
+                question: "כמה זמן אתה מתכנן לטייל?",
+                options: ["סופ\"ש", "שבוע", "שבועיים", "חודש ומעלה"]
+            },
+            {
+                question: "איזו יבשת מעניינת אותך יותר?",
+                options: ["אירופה", "אסיה", "אמריקה", "אפריקה"]
+            },
+            {
+                question: "מה חשוב לך יותר בחופשה?",
+                options: ["אטרקציות", "מנוחה", "קניות", "טבע"]
+            },
+            {
+                question: "איזה סוג של אוכל אתה מעדיף?",
+                options: ["ים תיכוני", "אסייתי", "אמריקאי", "אפריקאי"]
+            },
+            {
+                question: "מה הסגנון המוזיקלי האהוב עליך?",
+                options: ["קלאסי", "ג'אז", "פופ", "אתני"]
+            },
+            {
+                question: "איזה סוג של פעילות ספורטיבית אתה מעדיף?",
+                options: ["הליכה", "שחייה", "טיפוס", "רכיבה על אופניים"]
+            }
+        ];
+
+        const destinations = [
+            {
+                name: "ברצלונה, ספרד",
+                image: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8d/Sagrada_Familia_01.jpg/640px-Sagrada_Familia_01.jpg",
+                link: "https://www.expedia.com/Hotel-Search?destination=Barcelona",
+                attractions: ["סגרדה פמיליה", "פארק גואל", "לה רמבלה"],
+                tags: ["עיר", "ים", "תרבות", "אוכל", "אירופה", "חם", "אקטיבי", "ים תיכוני", "קלאסי", "הליכה"]
+            },
+            {
+                name: "טוקיו, יפן",
+                image: "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b2/Skyscrapers_of_Shinjuku_2009_January.jpg/640px-Skyscrapers_of_Shinjuku_2009_January.jpg",
+                link: "https://www.expedia.com/Hotel-Search?destination=Tokyo",
+                attractions: ["מקדש סנסו-ג'י", "מגדל טוקיו", "שיבויה קרוסינג"],
+                tags: ["עיר", "תרבות", "אוכל", "אסיה", "טכנולוגיה", "קניות", "אסייתי", "פופ", "רכיבה על אופניים"]
+            },
+            {
+                name: "ניו יורק, ארה\"ב",
+                image: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7a/View_of_Empire_State_Building_from_Rockefeller_Center_New_York_City_dllu_%28cropped%29.jpg/640px-View_of_Empire_State_Building_from_Rockefeller_Center_New_York_City_dllu_%28cropped%29.jpg",
+                link: "https://www.expedia.com/Hotel-Search?destination=New%20York",
+                attractions: ["סנטרל פארק", "פסל החירות", "טיימס סקוור"],
+                tags: ["עיר", "תרבות", "קניות", "אמריקה", "אקטיבי", "אוכל", "אמריקאי", "ג'אז", "הליכה"]
+            },
+            {
+                name: "בנגקוק, תאילנד",
+                image: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/af/Bangkok_Montage_2021.jpg/640px-Bangkok_Montage_2021.jpg",
+                link: "https://www.expedia.com/Hotel-Search?destination=Bangkok",
+                attractions: ["ארמון המלך", "ואט פו", "צ'טוצ'אק מרקט"],
+                tags: ["עיר", "תרבות", "אוכל", "אסיה", "חם", "מקדשים", "אסייתי", "אתני", "הליכה"]
+            },
+            {
+                name: "קייפטאון, דרום אפריקה",
+                image: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ec/Panorama_of_Cape_Town.jpg/640px-Panorama_of_Cape_Town.jpg",
+                link: "https://www.expedia.com/Hotel-Search?destination=Cape%20Town",
+                attractions: ["הר השולחן", "כף התקווה הטובה", "רובן איילנד"],
+                tags: ["עיר", "ים", "טבע", "אפריקה", "נעים", "אקטיבי", "אפריקאי", "אתני", "טיפוס"]
+            }
+        ];
+
+        let currentQuestion = 0;
+        let answers = [];
+
+        function startQuiz() {
+            document.getElementById('lobby').classList.remove('active');
+            document.getElementById('quiz').classList.add('active');
+            showQuestion();
+        }
+
+        function showQuestion() {
+            const questionData = questions[currentQuestion];
+            document.getElementById('questionText').textContent = questionData.question;
+            const optionsContainer = document.getElementById('options');
+            optionsContainer.innerHTML = '';
+            questionData.options.forEach((option, index) => {
+                const optionElement = document.createElement('div');
+                optionElement.classList.add('option');
+                optionElement.textContent = option;
+                optionElement.onclick = () => selectOption(index);
+                optionsContainer.appendChild(optionElement);
+            });
+            updateProgress();
+        }
+
+        function selectOption(index) {
+            const options = document.querySelectorAll('.option');
+            options.forEach(option => option.classList.remove('selected'));
+            options[index].classList.add('selected');
+        }
+
+        function nextQuestion() {
+            const selectedOption = document.querySelector('.option.selected');
+            if (!selectedOption) {
+                alert('אנא בחר תשובה לפני שתמשיך');
+                return;
+            }
+            answers.push(selectedOption.textContent);
+            currentQuestion++;
+            if (currentQuestion < questions.length) {
+                showQuestion();
+            } else {
+                showResults();
+            }
+        }
+
+        function updateProgress() {
+            const progress = ((currentQuestion + 1) / questions.length) * 100;
+            document.getElementById('progress').style.width = `${progress}%`;
+        }
+
+        function determineDestination() {
+            let scores = destinations.map(() => 0);
+            answers.forEach((answer, index) => {
+                destinations.forEach((destination, destIndex) => {
+                    if (destination.tags.includes(answer.toLowerCase())) {
+                        scores[destIndex] += 1;
+                    }
+                    // Add more weight to continent preference
+                    if (index === 5 && destination.tags.includes(answer.toLowerCase())) {
+                        scores[destIndex] += 2;
+                    }
+                });
+            });
+            
+            let maxScore = Math.max(...scores);
+            let maxIndices = scores.reduce((acc, score, index) => {
+                if (score === maxScore) {
+                    acc.push(index);
+                }
+                return acc;
+            }, []);
+            
+            // Randomly select one of the destinations with the highest score
+            let randomIndex = Math.floor(Math.random() * maxIndices.length);
+            return destinations[maxIndices[randomIndex]];
+        }
+
+        function showResults() {
+            document.getElementById('quiz').classList.remove('active');
+            document.getElementById('results').classList.add('active');
+            const destination = determineDestination();
+            document.getElementById('destinationName').textContent = destination.name;
+            document.getElementById('destinationImage').src = destination.image;
+            document.getElementById('destinationLink').href = destination.link;
+            const attractionsList = document.getElementById('attractionsList');
+            attractionsList.innerHTML = '';
+            destination.attractions.forEach(attraction => {
+                const li = document.createElement('li');
+                li.textContent = attraction;
+                attractionsList.appendChild(li);
+            });
+        }
+
+        function restartQuiz() {
+            currentQuestion = 0;
+            answers = [];
+            document.getElementById('results').classList.remove('active');
+            document.getElementById('lobby').classList.add('active');
+        }
+    </script>
+</body>
+</html>
